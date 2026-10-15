@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0E6B45">
+<title>RouteIQ</title>
+<style>
+:root{
+  --ink:#17241E; --paper:#F2F4EF; --green:#0E6B45; --yellow:#F4C20D;
+  --red:#C0392B; --mute:#5F6E66; --line:#D3DAD1; --white:#fff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Segoe UI",Roboto,system-ui,-apple-system,sans-serif;font-size:16px;line-height:1.4}
+header{position:sticky;top:0;z-index:5;background:var(--green);color:#fff;
+  display:flex;align-items:center;gap:8px;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top))}
+header .brand{font-weight:800;font-size:20px;letter-spacing:.2px;margin-right:auto}
+.pill{font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px;background:rgba(255,255,255,.18);white-space:nowrap}
+.pill.ok{background:#CFEBD9;color:#0B4A2F}
+.pill.mid{background:var(--yellow);color:#3B2F00}
+.pill.bad{background:#F4C7C1;color:#7A1E14}
+main{padding:14px 14px 96px;max-width:560px;margin:0 auto}
+section{display:none}
+section.on{display:block}
+h2{font-size:20px;margin:6px 0 10px}
+.card{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:14px;margin:12px 0}
+.note{font-size:14px;color:var(--mute);margin:8px 0}
+.note.warn{color:#7A5B00}
+.note.err{color:var(--red);font-weight:600}
+/* kilometre stone */
+.stone{width:230px;margin:6px auto 14px;border:3px solid var(--ink);border-radius:115px 115px 10px 10px;overflow:hidden;background:#fff}
+.stone .cap{background:var(--yellow);padding:26px 0 8px;text-align:center;font-weight:700;font-size:15px;border-bottom:3px solid var(--ink)}
+.stone .body{padding:10px 0 12px;text-align:center}
+.stone .big{font-size:56px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.stone .unit{font-size:16px;color:var(--mute);font-weight:600}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-bottom:8px}
+.row3 div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 4px}
+.row3 b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.row3 small{color:var(--mute);font-size:12px}
+button,.btn{font:inherit;font-weight:700;border-radius:10px;border:2px solid var(--green);background:#fff;color:var(--green);
+  padding:12px 16px;min-height:48px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+button.primary{background:var(--green);color:#fff}
+button.danger{border-color:var(--red);color:var(--red)}
+button.small{min-height:38px;padding:6px 12px;font-size:14px}
+button:disabled{opacity:.5}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.btns>*{flex:1 1 140px}
+input,textarea{font:inherit;width:100%;padding:11px;border:1.5px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);margin:4px 0 8px}
+label{font-weight:600;font-size:14px}
+.item{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.item .grow{flex:1;min-width:0}
+.item .t{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .s{color:var(--mute);font-size:13px}
+.item svg.prev{width:64px;height:48px;flex:none;background:#EAEFE8;border-radius:6px}
+.empty{text-align:center;color:var(--mute);padding:26px 8px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:6px 12px}
+.kv span:nth-child(odd){color:var(--mute)}
+.kv span:nth-child(even){font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;
+  padding-bottom:env(safe-area-inset-bottom);z-index:6}
+nav button{flex:1;border:0;border-radius:0;min-height:58px;color:var(--mute);background:#fff;font-size:13px;flex-direction:column;gap:2px}
+nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:var(--green);box-shadow:inset 0 3px 0 var(--green)}
+#modal{position:fixed;inset:0;background:rgba(23,36,30,.55);display:none;z-index:10;overflow:auto}
+#modal.on{display:block}
+#modal .sheet{background:var(--paper);margin:24px auto;max-width:540px;border-radius:12px;padding:14px;width:calc(100% - 24px)}
+svg.big{width:100%;height:220px;background:#EAEFE8;border-radius:8px}
+#toast{position:fixed;left:50%;bottom:78px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;
+  font-size:14px;z-index:20;display:none;max-width:88%}
+@media (prefers-reduced-motion:no-preference){button{transition:background .15s}}
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">RouteIQ</span>
+  <span class="pill" id="pillNet">online</span>
+  <span class="pill" id="pillGps">No GPS fix</span>
+</header>
+
+<main>
+<!-- RIDE -->
+<section id="s-ride" class="on">
+  <div id="recover"></div>
+  <div class="stone">
+    <div class="cap" id="rideState">Ready</div>
+    <div class="body"><div class="big" id="dist">0.00</div><div class="unit">km</div></div>
+  </div>
+  <div class="row3">
+    <div><b id="tTime">0:00</b><small>time</small></div>
+    <div><b id="tAvg">–</b><small>avg km/h</small></div>
+    <div><b id="tMax">–</b><small>max km/h</small></div>
+  </div>
+  <div id="gpsNote" class="note"></div>
+  <div class="btns" id="rideBtns"></div>
+  <div class="note">Mount your phone before you start. Don't handle it while riding.</div>
+
+  <div class="card">
+    <b>Where am I?</b>
+    <div id="where" class="note">Tap the button to get your current position.</div>
+    <div class="btns"><button id="btnWhere" class="small">Find my position</button></div>
+  </div>
+</section>
+
+<!-- TRIPS -->
+<section id="s-trips">
+  <h2>Trips</h2>
+  <div class="card" id="tripList"></div>
+</section>
+
+<!-- PLACES -->
+<section id="s-places">
+  <h2>Saved places</h2>
+  <div class="card">
+    <label for="pName">Name</label>
+    <input id="pName" placeholder="Home, Work, Dhaba…" autocomplete="off">
+    <label for="pLoc">Coordinates or Google Maps link</label>
+    <input id="pLoc" placeholder="29.0588, 76.0856  or a maps link" autocomplete="off">
+    <div class="btns">
+      <button id="btnUsePos" class="small">Use my position</button>
+      <button id="btnSavePlace" class="primary small">Save place</button>
+    </div>
+    <div id="pMsg" class="note"></div>
+  </div>
+  <div class="card" id="placeList"></div>
+</section>
+
+<!-- STATS -->
+<section id="s-stats">
+  <h2>Distance</h2>
+  <div id="statsBody"></div>
+</section>
+
+<!-- MORE -->
+<section id="s-more">
+  <h2>Data and settings</h2>
+  <div class="card">
+    <b>Your data stays on this phone.</b>
+    <div class="note">Nothing is uploaded. Trips are stored in this browser. Clearing browser data deletes them, so export a backup now and then.</div>
+    <div class="btns">
+      <button id="btnCsv">Export trips (CSV)</button>
+      <button id="btnBackup">Backup (JSON)</button>
+    </div>
+    <div class="btns">
+      <button id="btnRestore">Restore backup</button>
+      <button id="btnWipe" class="danger">Delete all trips</button>
+    </div>
+    <input type="file" id="fileRestore" accept=".json,application/json" hidden>
+    <div id="storeInfo" class="note"></div>
+  </div>
+  <div class="card">
+    <b>What this app can and can't do</b>
+    <div class="note">
+      Records trips with GPS while the screen is on and this page is open. Phones pause web pages in the background or when the screen locks, so keep RouteIQ in front.<br><br>
+      It has no maps or turn-by-turn directions of its own. "Navigate" hands the place to Google Maps (or another app you choose). If you downloaded offline maps in Google Maps, that app can use them.<br><br>
+      Distances are estimates. Poor GPS signal can shift them by a few percent, and points with accuracy worse than 40 m are skipped.
+    </div>
+  </div>
+</section>
+</main>
+
+<div id="modal"><div class="sheet" id="sheet"></div></div>
+<div id="toast"></div>
+
+<nav>
+  <button data-go="ride" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Ride</button>
+  <button data-go="trips"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Trips</button>
+  <button data-go="places"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Places</button>
+  <button data-go="stats"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Distance</button>
+  <button data-go="more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>More</button>
+</nav>
+
+<script>
+"use strict";
+//<core>
+const CFG={maxAcc:40,poorAcc:25,maxSpeed:70,minMoveSpeed:1,gapMax:60,driftFloor:3};
+function hav(a,b,c,d){
+  const R=6371008.8,r=Math.PI/180,dp=(c-a)*r,dl=(d-b)*r;
+  const x=Math.sin(dp/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dl/2)**2;
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(x)));
+}
+function newTrack(){return{pts:[],dist:0,moving:0,maxSpeed:0,rejected:0,last:null};}
+function pack(f){return[+f.lat.toFixed(6),+f.lon.toFixed(6),f.t,Math.round(f.acc),(f.speed==null||isNaN(f.speed))?null:+f.speed.toFixed(1)];}
+// Returns one of: first, ok, still, bad-accuracy, bad-time, jump
+function feed(tr,fix){
+  if(!(fix.acc<=CFG.maxAcc)){tr.rejected++;return"bad-accuracy";}
+  const l=tr.last;
+  if(!l){tr.last=fix;tr.pts.push(pack(fix));return"first";}
+  const d=hav(l.lat,l.lon,fix.lat,fix.lon),dt=(fix.t-l.t)/1000;
+  if(dt<=0){tr.rejected++;return"bad-time";}
+  const v=d/dt;
+  if(v>CFG.maxSpeed){tr.rejected++;return"jump";}
+  const noise=Math.max(CFG.driftFloor,0.6*Math.max(fix.acc,l.acc||0));
+  const slow=(fix.speed==null||isNaN(fix.speed)||fix.speed<1);
+  if(d<noise&&slow)return"still";           // GPS drift while stationary: keep old anchor
+  tr.dist+=d;
+  if(v>=CFG.minMoveSpeed&&dt<=CFG.gapMax)tr.moving+=dt;
+  const s=(fix.speed!=null&&!isNaN(fix.speed)&&fix.speed>=0)?fix.speed:v;
+  if(s>tr.maxSpeed&&fix.acc<=CFG.poorAcc&&s<=CFG.maxSpeed)tr.maxSpeed=s;
+  tr.last=fix;tr.pts.push(pack(fix));
+  return"ok";
+}
+// Pull a coordinate pair out of pasted text. Returns {lat,lon} or null. Short links can't be resolved offline.
+function parseLocation(text){
+  if(!text)return null;
+  const s=decodeURIComponent(String(text).trim().replace(/\+/g," "));
+  const num="(-?\\d{1,3}(?:\\.\\d+)?)";
+  const pats=[
+    new RegExp("!3d"+num+"!4d"+num),
+    new RegExp("@"+num+","+num),
+    new RegExp("[?&](?:q|ll|query|destination|daddr|center)="+num+"[,\\s]+"+num),
+    new RegExp("geo:"+num+","+num),
+    new RegExp("^\\(?\\s*"+num+"\\s*[,;\\s]\\s*"+num+"\\s*\\)?$")
+  ];
+  for(const p of pats){
+    const m=s.match(p);
+    if(m){const lat=parseFloat(m[1]),lon=parseFloat(m[2]);
+      if(lat>=-90&&lat<=90&&lon>=-180&&lon<=180)return{lat,lon};}
+  }
+  return null;
+}
+function isShortLink(t){return /(?:maps\.app\.goo\.gl|goo\.gl\/maps)/i.test(t||"");}
+//</core>
+
+// ---------- storage ----------
+const LS={
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){toast("Could not save. Storage is full or blocked. Export a backup.");return false}},
+  del(k){try{localStorage.removeItem(k)}catch(e){}}
+};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let trips=LS.get("riq_trips",[]);
+let places=LS.get("riq_places",[]);
+let active=LS.get("riq_active",null);   // {id,start,pausedMs,pauseAt,state,track}
+let watchId=null,wakeLock=null,lastFix=null,sinceSave=0;
+
+function toast(m){const t=$("#toast");t.textContent=m;t.style.display="block";clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display="none",3200)}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const fmtKm=m=>(m/1000).toFixed(2);
+function fmtDur(ms){const s=Math.max(0,Math.round(ms/1000)),h=Math.floor(s/3600),m=Math.floor(s%3600/60),r=s%60;
+  return h?`${h}:${String(m).padStart(2,"0")}:${String(r).padStart(2,"0")}`:`${m}:${String(r).padStart(2,"0")}`}
+const fmtDate=t=>new Date(t).toLocaleString([], {day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+const kmh=ms=>(ms*3.6).toFixed(0);
+
+// ---------- navigation between screens ----------
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>go(b.dataset.go));
+function go(n){
+  document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id==="s-"+n));
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.go===n));
+  if(n==="trips")renderTrips();
+  if(n==="places")renderPlaces();
+  if(n==="stats")renderStats();
+  if(n==="more")renderMore();
+  window.scrollTo(0,0);
+}
+
+// ---------- status pills ----------
+function netPill(){const p=$("#pillNet");const on=navigator.onLine;p.textContent=on?"online":"offline";p.className="pill"+(on?"":" mid")}
+addEventListener("online",netPill);addEventListener("offline",netPill);netPill();
+function gpsPill(){
+  const p=$("#pillGps");
+  if(!lastFix||Date.now()-lastFix.t>20000){p.textContent="No GPS fix";p.className="pill";return}
+  p.textContent="GPS ±"+Math.round(lastFix.acc)+" m";
+  p.className="pill "+(lastFix.acc<=CFG.poorAcc?"ok":lastFix.acc<=CFG.maxAcc?"mid":"bad");
+}
+setInterval(gpsPill,3000);
+
+// ---------- geolocation ----------
+function locationProblem(){
+  if(!("geolocation" in navigator))return"This browser has no location support.";
+  if(!window.isSecureContext)return"Location only works on a secure page. Open this app from an https:// address (see the setup steps) instead of a local file.";
+  return"";
+}
+function errText(e){
+  if(e.code===1)return"Location is blocked. In Chrome tap the lock icon next to the address, choose Permissions, and allow Location.";
+  if(e.code===2)return"Can't get a GPS position. Try going outdoors and check that Location is on in phone settings.";
+  return"GPS is slow to respond. Still trying.";
+}
+function startWatch(){
+  const prob=locationProblem();
+  if(prob){$("#gpsNote").className="note err";$("#gpsNote").textContent=prob;return false}
+  if(watchId!==null)return true;
+  watchId=navigator.geolocation.watchPosition(onFix,e=>{
+    $("#gpsNote").className="note "+(e.code===3?"warn":"err");$("#gpsNote").textContent=errText(e);
+  },{enableHighAccuracy:true,maximumAge:0,timeout:25000});
+  lockScreen();
+  return true;
+}
+function stopWatch(){
+  if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}
+  if(wakeLock){try{wakeLock.release()}catch(e){}wakeLock=null}
+}
+async function lockScreen(){
+  try{if("wakeLock" in navigator)wakeLock=await navigator.wakeLock.request("screen")}catch(e){}
+}
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="visible"&&active&&active.state==="run"){lockScreen();if(watchId===null)startWatch()}
+});
+function onFix(pos){
+  const c=pos.coords;
+  const fix={lat:c.latitude,lon:c.longitude,t:pos.timestamp,acc:c.accuracy,speed:c.speed};
+  lastFix=fix;gpsPill();
+  const note=$("#gpsNote");
+  if(c.accuracy>CFG.maxAcc){note.className="note warn";note.textContent="GPS signal is weak (±"+Math.round(c.accuracy)+" m). Points are being skipped until it improves."}
+  else if(c.accuracy>CFG.poorAcc){note.className="note warn";note.textContent="GPS accuracy is only fair (±"+Math.round(c.accuracy)+" m). Distance may be slightly off."}
+  else{note.className="note";note.textContent=active&&active.state==="run"?"GPS good (±"+Math.round(c.accuracy)+" m).":""}
+  if(active&&active.state==="run"){
+    const r=feed(active.track,fix);
+    if(r==="ok"||r==="first"){if(++sinceSave>=15){sinceSave=0;saveActive()}}
+    drawRide();
+  }
+}
+function saveActive(){if(active)LS.set("riq_active",active)}
+
+// ---------- ride screen ----------
+function elapsed(a){const end=a.state==="paused"?a.pauseAt:Date.now();return end-a.start-a.pausedMs}
+function drawRide(){
+  const idle=!active;
+  const tr=active?active.track:null;
+  $("#rideState").textContent=idle?"Ready":active.state==="run"?"Recording":"Paused";
+  $("#dist").textContent=idle?"0.00":fmtKm(tr.dist);
+  $("#tTime").textContent=idle?"0:00":fmtDur(elapsed(active));
+  $("#tAvg").textContent=(!idle&&tr.moving>5)?kmh(tr.dist/tr.moving):"–";
+  $("#tMax").textContent=(!idle&&tr.maxSpeed>0)?kmh(tr.maxSpeed):"–";
+  const b=$("#rideBtns");
+  if(idle)b.innerHTML='<button class="primary" id="bStart">Start trip</button>';
+  else if(active.state==="run")b.innerHTML='<button id="bPause">Pause</button><button class="primary" id="bFinish">Finish trip</button>';
+  else b.innerHTML='<button class="primary" id="bResume">Resume</button><button id="bFinish">Finish trip</button>';
+  const g=id=>$(id);
+  if(g("#bStart"))g("#bStart").onclick=startTrip;
+  if(g("#bPause"))g("#bPause").onclick=pauseTrip;
+  if(g("#bResume"))g("#bResume").onclick=resumeTrip;
+  if(g("#bFinish"))g("#bFinish").onclick=finishTrip;
+}
+setInterval(()=>{if(active&&active.state==="run")drawRide()},1000);
+
+function startTrip(){
+  if(!startWatch())return;
+  active={id:uid(),start:Date.now(),pausedMs:0,pauseAt:0,state:"run",track:newTrack()};
+  saveActive();drawRide();
+}
+function pauseTrip(){
+  active.state="paused";active.pauseAt=Date.now();
+  stopWatch();saveActive();drawRide();
+}
+function resumeTrip(){
+  if(!startWatch())return;
+  active.pausedMs+=Date.now()-active.pauseAt;
+  active.state="run";
+  active.track.last=null;               // don't count the gap while paused
+  saveActive();drawRide();
+}
+function finishTrip(){
+  const tr=active.track;
+  if(tr.pts.length<2||tr.dist<50){
+    if(!confirm("This trip is very short ("+Math.round(tr.dist)+" m). Save it anyway?")){
+      if(confirm("Discard this trip instead?"))discardActive();
+      return;
+    }
+  }
+  const end=active.state==="paused"?active.pauseAt:Date.now();
+  const t={id:active.id,start:active.start,end:end,dist:tr.dist,elapsed:elapsed(active),moving:tr.moving,
+    maxSpeed:tr.maxSpeed,n:tr.pts.length,rej:tr.rejected,name:""};
+  LS.set("riq_pts_"+t.id,tr.pts);
+  trips.unshift(t);LS.set("riq_trips",trips);
+  discardActive(true);
+  toast("Trip saved: "+fmtKm(t.dist)+" km");
+  go("trips");openTrip(t.id);
+}
+function discardActive(silent){
+  stopWatch();active=null;LS.del("riq_active");sinceSave=0;drawRide();renderRecover();
+  if(!silent)toast("Trip discarded");
+}
+function renderRecover(){
+  const el=$("#recover");
+  if(!active||!active.recovered){el.innerHTML="";return}
+  el.innerHTML=`<div class="card"><b>Unfinished trip found</b>
+    <div class="note">Started ${esc(fmtDate(active.start))}, ${fmtKm(active.track.dist)} km recorded. The page was closed before you finished.</div>
+    <div class="btns"><button class="primary small" id="rcResume">Continue</button><button class="small" id="rcFinish">Save it</button><button class="danger small" id="rcDrop">Discard</button></div></div>`;
+  $("#rcResume").onclick=()=>{delete active.recovered;resumeTrip();renderRecover()};
+  $("#rcFinish").onclick=()=>{delete active.recovered;finishTrip();renderRecover()};
+  $("#rcDrop").onclick=()=>{if(confirm("Discard this unfinished trip?"))discardActive()};
+}
+// "Where am I?"
+$("#btnWhere").onclick=()=>{
+  const prob=locationProblem();
+  if(prob){$("#where").className="note err";$("#where").textContent=prob;return}
+  $("#where").className="note";$("#where").textContent="Getting position…";
+  navigator.geolocation.getCurrentPosition(p=>{
+    const lat=p.coords.latitude.toFixed(6),lon=p.coords.longitude.toFixed(6);
+    lastFix={lat:+lat,lon:+lon,t:p.timestamp,acc:p.coords.accuracy,speed:p.coords.speed};gpsPill();
+    $("#where").innerHTML=`<b>${lat}, ${lon}</b> (±${Math.round(p.coords.accuracy)} m)
+      <div class="btns"><button class="small" id="wSave">Save as place</button><a class="btn small" target="_blank" rel="noopener" href="https://www.google.com/maps?q=${lat},${lon}">Open in Google Maps</a></div>`;
+    $("#wSave").onclick=()=>{go("places");$("#pLoc").value=lat+", "+lon;$("#pName").focus()};
+  },e=>{$("#where").className="note err";$("#where").textContent=errText(e)},{enableHighAccuracy:true,timeout:25000,maximumAge:0});
+};
+
+// ---------- route drawing ----------
+function routeSvg(pts,cls){
+  if(!pts||pts.length<2)return`<svg class="${cls}" viewBox="0 0 100 100"></svg>`;
+  const step=Math.ceil(pts.length/300),p=pts.filter((_,i)=>i%step===0||i===pts.length-1);
+  const lat0=p.reduce((a,x)=>a+x[0],0)/p.length,k=Math.cos(lat0*Math.PI/180);
+  const xs=p.map(q=>q[1]*k),ys=p.map(q=>-q[0]);
+  const minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);
+  const w=Math.max(maxx-minx,1e-6),h=Math.max(maxy-miny,1e-6),sc=80/Math.max(w,h);
+  const ox=(100-w*sc)/2,oy=(100-h*sc)/2;
+  const pt=(x,y)=>[(x-minx)*sc+ox,(y-miny)*sc+oy];
+  const d=p.map((_,i)=>pt(xs[i],ys[i]).map(v=>v.toFixed(1)).join(",")).join(" ");
+  const a=pt(xs[0],ys[0]),b=pt(xs[xs.length-1],ys[ys.length-1]);
+  return`<svg class="${cls}" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-label="Route preview">
+    <polyline points="${d}" fill="none" stroke="#0E6B45" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${a[0]}" cy="${a[1]}" r="3" fill="#F4C20D" stroke="#17241E" stroke-width="1"/>
+    <circle cx="${b[0]}" cy="${b[1]}" r="3" fill="#C0392B" stroke="#17241E" stroke-width="1"/></svg>`;
+}
+
+// ---------- trips ----------
+function renderTrips(){
+  const el=$("#tripList");
+  if(!trips.length){el.innerHTML='<div class="empty">No trips yet. Start one from the Ride tab.</div>';return}
+  el.innerHTML=trips.map(t=>{
+    const pts=LS.get("riq_pts_"+t.id,[]);
+    return`<div class="item" data-id="${t.id}" role="button" tabindex="0">${routeSvg(pts,"prev")}
+      <div class="grow"><div class="t">${esc(t.name||fmtDate(t.start))}</div>
+      <div class="s">${fmtKm(t.dist)} km, ${fmtDur(t.elapsed)}${t.name?", "+esc(fmtDate(t.start)):""}</div></div></div>`}).join("");
+  el.querySelectorAll(".item").forEach(i=>{i.onclick=()=>openTrip(i.dataset.id);i.onkeydown=e=>{if(e.key==="Enter")openTrip(i.dataset.id)}});
+}
+function openTrip(id){
+  const t=trips.find(x=>x.id===id);if(!t)return;
+  const pts=LS.get("riq_pts_"+id,[]);
+  const avg=t.moving>5?kmh(t.dist/t.moving)+" km/h":"–";
+  const mx=t.maxSpeed>0?kmh(t.maxSpeed)+" km/h":"–";
+  $("#sheet").innerHTML=`<h2>${esc(t.name||fmtDate(t.start))}</h2>
+    ${routeSvg(pts,"big")}
+    <div class="card kv">
+      <span>Distance</span><span>${fmtKm(t.dist)} km</span>
+      <span>Total time</span><span>${fmtDur(t.elapsed)}</span>
+      <span>Moving time</span><span>${fmtDur(t.moving*1000)}</span>
+      <span>Avg moving speed</span><span>${avg}</span>
+      <span>Top speed*</span><span>${mx}</span>
+      <span>GPS points kept</span><span>${t.n}</span>
+      <span>Points skipped (weak GPS or jumps)</span><span>${t.rej}</span>
+    </div>
+    <div class="note">*Top speed comes from GPS and can be off. Only readings with good accuracy are used.</div>
+    <div class="btns"><button id="tGpx" class="primary small">Export GPX</button><button id="tRen" class="small">Rename</button></div>
+    <div class="btns"><button id="tDel" class="danger small">Delete trip</button><button id="tClose" class="small">Close</button></div>`;
+  $("#modal").classList.add("on");
+  $("#tClose").onclick=closeModal;
+  $("#tGpx").onclick=()=>dl("routeiq-"+new Date(t.start).toISOString().slice(0,10)+".gpx","application/gpx+xml",gpx(t,pts));
+  $("#tRen").onclick=()=>{const n=prompt("Trip name",t.name||"");if(n!==null){t.name=n.trim().slice(0,60);LS.set("riq_trips",trips);openTrip(id);renderTrips()}};
+  $("#tDel").onclick=()=>{if(confirm("Delete this trip? This can't be undone.")){
+    trips=trips.filter(x=>x.id!==id);LS.set("riq_trips",trips);LS.del("riq_pts_"+id);closeModal();renderTrips();toast("Trip deleted")}};
+}
+function closeModal(){$("#modal").classList.remove("on")}
+$("#modal").onclick=e=>{if(e.target.id==="modal")closeModal()};
+
+function gpx(t,pts){
+  const seg=pts.map(p=>`<trkpt lat="${p[0]}" lon="${p[1]}"><time>${new Date(p[2]).toISOString()}</time></trkpt>`).join("\n");
+  return`<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="RouteIQ" xmlns="http://www.topografix.com/GPX/1/1"><trk><name>${esc(t.name||fmtDate(t.start))}</name><trkseg>
+${seg}
+</trkseg></trk></gpx>`;
+}
+function dl(name,mime,text){
+  const b=new Blob([text],{type:mime}),a=document.createElement("a");
+  a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+
+// ---------- places ----------
+function navLinks(p){
+  const g=`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}&travelmode=two-wheeler`;
+  const geo=`geo:${p.lat},${p.lon}?q=${p.lat},${p.lon}(${encodeURIComponent(p.name)})`;
+  return`<a class="btn small" target="_blank" rel="noopener" href="${g}">Google Maps</a><a class="btn small" href="${geo}">Other app</a>`;
+}
+function renderPlaces(){
+  const el=$("#placeList");
+  if(!places.length){el.innerHTML='<div class="empty">No saved places yet. Add Home, Work or a favourite stop above.</div>';return}
+  el.innerHTML=places.map(p=>`<div class="card" style="margin:0 0 10px" data-id="${p.id}">
+    <div class="t" style="font-weight:700">${esc(p.name)}</div>
+    <div class="s note" style="margin:2px 0 8px">${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}</div>
+    <div class="btns" style="margin:0">${navLinks(p)}<button class="small" data-act="ren">Rename</button><button class="small danger" data-act="del">Delete</button></div></div>`).join("");
+  el.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>{
+    const id=b.closest("[data-id]").dataset.id,p=places.find(x=>x.id===id);
+    if(b.dataset.act==="del"){if(confirm("Delete "+p.name+"?")){places=places.filter(x=>x.id!==id);LS.set("riq_places",places);renderPlaces()}}
+    else{const n=prompt("Place name",p.name);if(n&&n.trim()){p.name=n.trim().slice(0,60);LS.set("riq_places",places);renderPlaces()}}
+  });
+}
+$("#btnUsePos").onclick=()=>{
+  const prob=locationProblem();if(prob){msg(prob,true);return}
+  msg("Getting position…");
+  navigator.geolocation.getCurrentPosition(p=>{$("#pLoc").value=p.coords.latitude.toFixed(6)+", "+p.coords.longitude.toFixed(6);msg("Position filled in (±"+Math.round(p.coords.accuracy)+" m).")},
+    e=>msg(errText(e),true),{enableHighAccuracy:true,timeout:25000,maximumAge:0});
+};
+function msg(t,err){const m=$("#pMsg");m.textContent=t;m.className="note"+(err?" err":"")}
+$("#btnSavePlace").onclick=()=>{
+  const name=$("#pName").value.trim(),loc=$("#pLoc").value.trim();
+  if(!name){msg("Give the place a name.",true);return}
+  const c=parseLocation(loc);
+  if(!c){
+    msg(isShortLink(loc)?"Short Google links can't be read without internet. Open the link, then copy the coordinates from the address bar, or press and hold the pin and copy the numbers.":"Couldn't find coordinates. Paste numbers like 29.0588, 76.0856 or a full Google Maps link.",true);return}
+  places.unshift({id:uid(),name:name.slice(0,60),lat:c.lat,lon:c.lon});
+  LS.set("riq_places",places);$("#pName").value="";$("#pLoc").value="";msg("Saved.");renderPlaces();
+};
+
+// ---------- distance stats ----------
+function dayKey(t){const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function renderStats(){
+  const el=$("#statsBody");
+  if(!trips.length){el.innerHTML='<div class="card empty">Your totals will show here after your first trip.</div>';return}
+  const now=new Date(),sod=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+  const dow=(now.getDay()+6)%7,wk=sod-dow*864e5;
+  const mo=new Date(now.getFullYear(),now.getMonth(),1).getTime(),yr=new Date(now.getFullYear(),0,1).getTime();
+  const sum=from=>trips.filter(t=>t.start>=from).reduce((a,t)=>a+t.dist,0);
+  const byDay={};trips.forEach(t=>{const k=dayKey(t.start);byDay[k]=(byDay[k]||0)+t.dist});
+  const days=[];for(let i=13;i>=0;i--){const d=new Date(sod-i*864e5);days.push({k:dayKey(d),v:(byDay[dayKey(d)]||0)/1000,d:d.getDate()})}
+  const mx=Math.max(1,...days.map(d=>d.v));
+  const bars=days.map((d,i)=>{const h=Math.round(d.v/mx*80);
+    return`<rect x="${i*21+4}" y="${96-h}" width="16" height="${h}" fill="#0E6B45" rx="2"/><text x="${i*21+12}" y="112" font-size="8" text-anchor="middle" fill="#5F6E66">${d.d}</text>`}).join("");
+  const total=trips.reduce((a,t)=>a+t.dist,0),longest=Math.max(...trips.map(t=>t.dist));
+  el.innerHTML=`<div class="card kv">
+    <span>Today</span><span>${fmtKm(sum(sod))} km</span>
+    <span>This week</span><span>${fmtKm(sum(wk))} km</span>
+    <span>This month</span><span>${fmtKm(sum(mo))} km</span>
+    <span>This year</span><span>${fmtKm(sum(yr))} km</span></div>
+    <div class="card"><b>Last 14 days (km)</b>
+      <svg viewBox="0 0 300 118" style="width:100%" role="img" aria-label="Daily distance for the last 14 days">${bars}</svg>
+      <div class="note">Tallest bar: ${mx.toFixed(1)} km</div></div>
+    <div class="card kv"><span>Trips recorded</span><span>${trips.length}</span>
+      <span>All-time distance</span><span>${fmtKm(total)} km</span>
+      <span>Longest trip</span><span>${fmtKm(longest)} km</span>
+      <span>Average trip</span><span>${fmtKm(total/trips.length)} km</span></div>
+    <div class="note">Frequent routes and reliability comparisons need many repeat trips and are not part of this simple version.</div>`;
+}
+
+// ---------- more: export / backup ----------
+function renderMore(){
+  let bytes=0;try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith("riq_"))bytes+=k.length+localStorage.getItem(k).length}}catch(e){}
+  $("#storeInfo").textContent="Using about "+(bytes*2/1024).toFixed(0)+" KB of roughly 5,000 KB available in this browser.";
+}
+$("#btnCsv").onclick=()=>{
+  if(!trips.length){toast("No trips to export");return}
+  const rows=["start,end,distance_km,total_min,moving_min,avg_moving_kmh,max_kmh,name"];
+  trips.forEach(t=>rows.push([new Date(t.start).toISOString(),new Date(t.end).toISOString(),fmtKm(t.dist),(t.elapsed/60000).toFixed(1),(t.moving/60).toFixed(1),
+    t.moving>5?kmh(t.dist/t.moving):"",t.maxSpeed>0?kmh(t.maxSpeed):"",'"'+String(t.name||"").replace(/"/g,'""')+'"'].join(",")));
+  dl("routeiq-trips.csv","text/csv",rows.join("\n"));
+};
+$("#btnBackup").onclick=()=>{
+  const data={app:"RouteIQ",version:1,saved:new Date().toISOString(),trips,places,pts:{}};
+  trips.forEach(t=>data.pts[t.id]=LS.get("riq_pts_"+t.id,[]));
+  dl("routeiq-backup-"+new Date().toISOString().slice(0,10)+".json","application/json",JSON.stringify(data));
+};
+$("#btnRestore").onclick=()=>$("#fileRestore").click();
+$("#fileRestore").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(d.app!=="RouteIQ"||!Array.isArray(d.trips))throw new Error("not a RouteIQ backup");
+      let added=0;
+      d.trips.forEach(t=>{if(!trips.some(x=>x.id===t.id)&&d.pts&&d.pts[t.id]){trips.push(t);LS.set("riq_pts_"+t.id,d.pts[t.id]);added++}});
+      trips.sort((a,b)=>b.start-a.start);LS.set("riq_trips",trips);
+      (d.places||[]).forEach(p=>{if(!places.some(x=>x.id===p.id))places.push(p)});LS.set("riq_places",places);
+      toast("Restored "+added+" new trip"+(added===1?"":"s"));renderMore();
+    }catch(err){toast("That file isn't a valid RouteIQ backup.")}
+    e.target.value="";
+  };
+  r.readAsText(f);
+};
+$("#btnWipe").onclick=()=>{
+  if(!confirm("Delete ALL trips and GPS points from this phone? Saved places are kept."))return;
+  if(!confirm("Really delete everything? This can't be undone."))return;
+  trips.forEach(t=>LS.del("riq_pts_"+t.id));trips=[];LS.set("riq_trips",trips);toast("All trips deleted");renderMore();
+};
+
+// ---------- boot ----------
+if(active&&active.state==="run"){active.state="paused";active.pauseAt=Date.now();active.recovered=true;saveActive()}
+drawRide();renderRecover();
+</script>
+</body>
+</html>
